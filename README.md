@@ -1,20 +1,19 @@
 # 🛡️ Enterprise Zero-Trust AWS EKS Architecture
 
-> A hands-on Terraform revision exercise covering VPC networking, EKS, IAM, and AWS Client VPN from scratch. Built to sharpen infrastructure-as-code skills across real AWS services.
+> An enterprise-grade, zero-trust AWS infrastructure module. Provisions a fully private EKS cluster secured behind a mutual TLS AWS Client VPN, deployed entirely via Terraform.
 
 ---
 
-## 👨‍💻 About This Project
+## 👨‍💻 Architecture Overview & Goals
 
-This is a **personal practice repository** I built to revise and deepen my Terraform skills. With ~2 years of cloud/infrastructure experience, I wanted to go beyond the basics and build something that reflects real-world patterns — a fully private EKS cluster locked behind a Mutual TLS Client VPN, all deployed as code with zero manual console clicks.
+This repository contains a production-ready Infrastructure as Code (IaC) implementation of a highly secure AWS environment. The architecture is designed around the principles of **Zero-Trust** — the Kubernetes API server is completely isolated from the public internet, and access is strictly gated through a Client VPN utilizing Mutual TLS (mTLS) authentication.
 
-**What I practised:**
-- Writing and structuring Terraform modules from scratch
-- Wiring implicit dependencies between modules
-- Working with the `tls` provider to automate certificate generation
-- Troubleshooting Terraform state (`terraform import`)
-- Debugging real AWS networking and firewall rules
-- Connecting to a private Kubernetes cluster securely via VPN
+**Key Engineering Highlights:**
+- **Zero-Trust Compute:** EKS control plane and worker nodes are deployed in private subnets with no public IP assignment.
+- **Automated PKI:** The `tls` provider is used to automatically generate and manage the Certificate Authority (CA), Server, and Client certificates as code.
+- **Modular Design:** Infrastructure is broken down into logical, reusable modules (`vpc`, `iam`, `eks`, `vpn`) with explicit state boundaries.
+- **Secure Egress:** Worker nodes route outbound traffic through a managed NAT Gateway, ensuring container image pulls remain secure.
+- **VPN Split-Tunneling:** Client VPN is configured with split-tunneling enabled, ensuring only cluster-bound traffic is routed through the AWS network.
 
 ---
 
@@ -159,13 +158,13 @@ Uses the Terraform `tls` provider to act as its own Certificate Authority — ge
 | Split Tunnel | Normal internet works while connected; only cluster traffic routes through VPN |
 | Terraform-generated certs | No manual OpenSSL needed; fully reproducible as code |
 | S3 remote state | Shared state without needing DynamoDB for this scale |
-| Single NAT Gateway | Cost-optimised for practice; use one per AZ in production |
+| Single NAT Gateway | Configured for single-AZ egress by default; can be scaled to multi-AZ for high availability |
 
 ---
 
-## ⚠️ Cost Warning
+## ⚠️ Cost Estimation & Teardown
 
-These AWS resources charge **by the hour**. Always destroy when done:
+If you are deploying this architecture for testing or demonstration purposes, be aware that these AWS resources incur **hourly charges**. Always tear down the infrastructure when not in use:
 
 ```bash
 terraform destroy
