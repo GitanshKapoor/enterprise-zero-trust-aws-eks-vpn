@@ -1,0 +1,8 @@
+*.tfstate
+*.tfstate.backup
+*.tfvars
+.terraform/*
+.terraform.lock.hcl
+my_key.txt
+my_rsa_key.txt
+*.ovpn

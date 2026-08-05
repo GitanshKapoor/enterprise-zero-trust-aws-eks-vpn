@@ -1,0 +1,42 @@
+# terraform.tfvars.example
+#
+# Copy this file and rename it to terraform.tfvars
+# then fill in your own values.
+#
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# ⚠️  Never commit terraform.tfvars to Git — it is in .gitignore
+
+# ─────────────────────────────────────────
+# General
+# ─────────────────────────────────────────
+
+# Name prefix used for all AWS resources (cluster, VPC, VPN, etc.)
+project_name = "my-cluster"
+
+# EC2 instance type for EKS worker nodes
+# t2.micro  → cheapest, dev/testing only
+# t2.small  → recommended for this setup
+# t3.medium → production workloads
+machine_type = "t2.small"
+
+# ─────────────────────────────────────────
+# Networking
+# ─────────────────────────────────────────
+
+# CIDR block for the entire VPC
+# All subnets must be subsets of this range
+vpc_cidr = "10.0.0.0/16"
+
+# CIDR block for VPN client IP assignment
+# ⚠️  Must NOT overlap with vpc_cidr!
+# If vpc_cidr is 10.0.0.0/16, use 10.1.0.0/16 or 172.16.0.0/16 etc.
+vpn_cidr = "10.1.0.0/16"
+
+# Public subnet CIDRs — one per Availability Zone
+# These host the Internet Gateway and NAT Gateway
+public_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24"]
+
+# Private subnet CIDRs — one per Availability Zone
+# These host the EKS Control Plane and Worker Nodes
+private_subnet_cidrs = ["10.0.3.0/24", "10.0.4.0/24"]
