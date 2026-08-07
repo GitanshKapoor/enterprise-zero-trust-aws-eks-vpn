@@ -10,6 +10,7 @@ This repository contains a production-ready Infrastructure as Code (IaC) impleme
 
 **Key Engineering Highlights:**
 - **Zero-Trust Compute:** EKS control plane and worker nodes are deployed in private subnets with no public IP assignment.
+- **Secrets Encryption:** Kubernetes secrets are encrypted at rest in `etcd` using a custom, Terraform-provisioned AWS KMS Key.
 - **Automated PKI:** The `tls` provider is used to automatically generate and manage the Certificate Authority (CA), Server, and Client certificates as code.
 - **Modular Design:** Infrastructure is broken down into logical, reusable modules (`vpc`, `iam`, `eks`, `vpn`) with explicit state boundaries.
 - **Secure Egress:** Worker nodes route outbound traffic through a managed NAT Gateway, ensuring container image pulls remain secure.
@@ -142,7 +143,7 @@ Builds a custom VPC with public and private subnets across two Availability Zone
 Creates two IAM Roles: one for the EKS Control Plane (so AWS can manage the cluster) and one for the Worker Nodes (so EC2 instances can join the cluster and pull from ECR).
 
 ### `eks/` — The Compute Layer
-Deploys a private EKS cluster with the public API endpoint disabled. Worker nodes live in private subnets. CloudWatch logging is enabled for audit trails. A security group rule opens Port 443 specifically for VPN traffic.
+Deploys a private EKS cluster with the public API endpoint disabled. Worker nodes live in private subnets. Kubernetes secrets are secured via envelope encryption using a dedicated AWS KMS key. CloudWatch logging is enabled for audit trails. A security group rule opens Port 443 specifically for VPN traffic.
 
 ### `vpn/` — The Secure Access Layer
 Uses the Terraform `tls` provider to act as its own Certificate Authority — generating a Root CA, a Server Certificate, and a Client Certificate entirely in code. Certificates are uploaded to ACM and a Client VPN Endpoint is created with Split Tunnel enabled so only cluster traffic goes through the VPN.
@@ -155,6 +156,7 @@ Uses the Terraform `tls` provider to act as its own Certificate Authority — ge
 |---|---|
 | Private EKS endpoint only | API server is invisible to the public internet |
 | Mutual TLS VPN | Both sides verify identity — more secure than password auth |
+| KMS Envelope Encryption | K8s secrets are encrypted at rest with a custom KMS key instead of default etcd encryption |
 | Split Tunnel | Normal internet works while connected; only cluster traffic routes through VPN |
 | Terraform-generated certs | No manual OpenSSL needed; fully reproducible as code |
 | S3 remote state | Shared state without needing DynamoDB for this scale |
